@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>QTM</title>
+<meta name="theme-color" content="#fff200">
+<link rel="icon" href="logo.webp">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Bangers&family=Creepster&family=Lobster&family=Monoton&family=Pacifico&family=Press+Start+2P&family=Rubik+Glitch&family=UnifrakturMaguntia&family=Comic+Neue:wght@700&family=Bungee+Shade&display=swap" rel="stylesheet">
+<style>
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #fff8b0; touch-action: none; -webkit-user-select: none; user-select: none; }
+  body { font-family: "Comic Sans MS", "Comic Neue", cursive; }
+  #stage { position: fixed; inset: 0; overflow: hidden; }
+  .logo { position: absolute; width: 120px; mix-blend-mode: multiply; pointer-events: none; }
+  .txt { position: absolute; font-weight: 700; white-space: nowrap; pointer-events: none; line-height: 1; }
+  .dvd { position: absolute; left: 0; top: 0; will-change: transform; pointer-events: none; }
+  /* logo recoloré : le fond coloré n'apparaît qu'à travers la transparence du logo */
+  .dvd.img { width: 130px; aspect-ratio: 1379 / 750; -webkit-mask: url(logo.webp) center / contain no-repeat; mask: url(logo.webp) center / contain no-repeat; }
+  h1 { position: fixed; left: 50%; top: 42%; transform: translate(-50%, -50%) rotate(-6deg); margin: 0; z-index: 5;
+       font: 400 28vw/1 "Bangers", Impact, sans-serif; color: #ff0033; -webkit-text-stroke: 3px #000; pointer-events: none;
+       animation: wobble 0.9s ease-in-out infinite alternate; }
+  @keyframes wobble { to { transform: translate(-50%, -50%) rotate(7deg) scale(1.08); } }
+  .bar { position: fixed; left: 12px; right: 12px; bottom: calc(110px + env(safe-area-inset-bottom)); z-index: 6;
+         background: #000; color: #fff; font: 700 14px "Comic Neue", "Comic Sans MS", cursive; padding: 10px 12px; text-align: center; }
+  .bar i { display: block; height: 10px; margin-top: 8px; background: #333; }
+  .bar i b { display: block; height: 100%; width: 99%; background: #00ff44; }
+  #fuir { position: fixed; z-index: 7; left: 50%; bottom: calc(40px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+          font: 400 22px "Bangers", Impact, sans-serif; letter-spacing: 1px; padding: 14px 26px; border: 0; background: #000; color: #fff200;
+          transition: left .15s, bottom .15s; }
+  #compteur { position: fixed; z-index: 7; top: calc(10px + env(safe-area-inset-top)); left: 12px; right: 12px; text-align: center;
+              font: 400 12px "Press Start 2P", monospace; color: #000; background: #fff200; padding: 8px; }
+  @media (prefers-reduced-motion: reduce) { h1 { animation: none; } #fuir { transition: none; } }
+</style>
+</head>
+<body>
+<div id="stage"></div>
+<h1>QTM</h1>
+<div id="compteur">QTM affichés : 0</div>
+<div class="bar">Chargement du site sérieux<i><b></b></i><span id="pct">99 %</span></div>
+<button id="fuir" type="button">Sortir de QTM</button>
+
+<script>
+const stage = document.getElementById('stage');
+const W = () => innerWidth, H = () => innerHeight;
+const rnd = (a, b) => a + Math.random() * (b - a);
+const pick = a => a[Math.floor(Math.random() * a.length)];
+const calme = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const FONTS = ['Bangers', 'Creepster', 'Lobster', 'Monoton', 'Pacifico', '"Press Start 2P"', '"Rubik Glitch"',
+  'UnifrakturMaguntia', '"Comic Neue"', '"Bungee Shade"', 'Impact', '"Comic Sans MS"', 'Papyrus', '"Times New Roman"', 'Courier New'];
+const COLORS = ['#ff0033', '#0044ff', '#00b832', '#ff00cc', '#ff7a00', '#000000', '#00c2d6', '#8a5a00'];
+const TEXTES = ['QTM', 'QTM', 'QTM', 'qtm', 'Q T M', 'QTM !!!', 'QTM?', 'QTMMMM', 'Q.T.M'];
+
+let total = 0;
+const compteur = document.getElementById('compteur');
+const compter = n => { total += n; compteur.textContent = 'QTM affichés : ' + total; };
+
+// logos et textes fixes, dans tous les sens
+function semer(n) {
+  for (let i = 0; i < n; i++) {
+    let el;
+    if (Math.random() < 0.5) {
+      el = document.createElement('img');
+      el.src = 'logo.webp'; el.alt = ''; el.className = 'logo';
+      el.style.width = rnd(50, 220) + 'px';
+      el.style.transform = `rotate(${rnd(0, 360)}deg) scaleX(${pick([1, -1])}) scaleY(${pick([1, 1, -1])})`;
+      el.style.opacity = rnd(0.25, 1);
+    } else {
+      el = document.createElement('div');
+      el.className = 'txt';
+      el.textContent = pick(TEXTES);
+      el.style.fontFamily = pick(FONTS);
+      el.style.fontSize = rnd(16, 90) + 'px';
+      el.style.color = pick(COLORS);
+      el.style.transform = `rotate(${rnd(-180, 180)}deg)`;
+      el.style.opacity = rnd(0.4, 1);
+    }
+    el.style.left = rnd(-60, W()) + 'px';
+    el.style.top = rnd(-40, H()) + 'px';
+    stage.appendChild(el);
+  }
+  compter(n);
+}
+
+// rebonds façon logo DVD : change de couleur à chaque mur
+const bouncers = [];
+function lancer(x, y, image = Math.random() < 0.6) {
+  const el = document.createElement('div');
+  el.className = 'dvd ' + (image ? 'img' : 'txt');
+  if (image) {
+    el.style.width = rnd(90, 160) + 'px';
+  } else {
+    el.textContent = 'QTM';
+    el.style.fontFamily = pick(FONTS);
+    el.style.fontSize = rnd(30, 70) + 'px';
+  }
+  stage.appendChild(el);
+  const b = { el, image, x: x ?? rnd(0, W() - 150), y: y ?? rnd(0, H() - 100),
+              vx: pick([-1, 1]) * rnd(1.2, 3), vy: pick([-1, 1]) * rnd(1.2, 3) };
+  teindre(b);
+  bouncers.push(b);
+  compter(1);
+}
+function teindre(b) {
+  const c = pick(COLORS.filter(c => c !== '#000000'));
+  if (b.image) b.el.style.background = c; else b.el.style.color = c;
+}
+function boucle() {
+  for (const b of bouncers) {
+    const w = b.el.offsetWidth, h = b.el.offsetHeight;
+    b.x += b.vx; b.y += b.vy;
+    let tape = false;
+    if (b.x <= 0 || b.x + w >= W()) { b.vx *= -1; b.x = Math.max(0, Math.min(b.x, W() - w)); tape = true; }
+    if (b.y <= 0 || b.y + h >= H()) { b.vy *= -1; b.y = Math.max(0, Math.min(b.y, H() - h)); tape = true; }
+    if (tape) teindre(b);
+    b.el.style.transform = `translate(${b.x}px, ${b.y}px)`;
+  }
+  requestAnimationFrame(boucle);
+}
+
+semer(70);
+for (let i = 0; i < 9; i++) lancer();
+if (!calme) requestAnimationFrame(boucle);
+else bouncers.forEach(b => b.el.style.transform = `translate(${b.x}px, ${b.y}px)`);
+
+// toucher l'écran : encore plus de QTM
+stage.addEventListener('pointerdown', e => { lancer(e.clientX - 60, e.clientY - 30); semer(3); });
+
+// le bouton pour partir s'enfuit, et s'il est attrapé il ajoute des QTM
+const fuir = document.getElementById('fuir');
+let essais = 0;
+function sauver() {
+  fuir.style.left = rnd(25, 75) + '%';
+  fuir.style.bottom = rnd(60, H() - 160) + 'px';
+  fuir.textContent = pick(['Raté', 'Non', 'Toujours QTM', 'Sortir de QTM', 'Presque', 'QTM']);
+}
+fuir.addEventListener('pointerdown', e => {
+  e.stopPropagation();
+  if (++essais % 4) return sauver();
+  semer(40); for (let i = 0; i < 5; i++) lancer();
+  fuir.textContent = 'Encore plus de QTM';
+});
+
+// la barre reste coincée à 99 %, parfois elle recule
+const pct = document.getElementById('pct'), barre = document.querySelector('.bar b');
+setInterval(() => {
+  const v = pick([99, 99, 99, 98.7, 99.9, 12, 99]);
+  barre.style.width = v + '%'; pct.textContent = String(v).replace('.', ',') + ' %';
+}, 1400);
+</script>
+</body>
+</html>
