@@ -21,10 +21,6 @@
        font: 400 28vw/1 "Bangers", Impact, sans-serif; color: #ff0033; -webkit-text-stroke: 3px #000; pointer-events: none;
        animation: wobble 0.9s ease-in-out infinite alternate; }
   @keyframes wobble { to { transform: translate(-50%, -50%) rotate(7deg) scale(1.08); } }
-  .bar { position: fixed; left: 12px; right: 12px; bottom: calc(110px + env(safe-area-inset-bottom)); z-index: 6;
-         background: #000; color: #fff; font: 700 14px "Comic Neue", "Comic Sans MS", cursive; padding: 10px 12px; text-align: center; }
-  .bar i { display: block; height: 10px; margin-top: 8px; background: #333; }
-  .bar i b { display: block; height: 100%; width: 99%; background: #00ff44; }
   #fuir { position: fixed; z-index: 7; left: 50%; bottom: calc(40px + env(safe-area-inset-bottom)); transform: translateX(-50%);
           font: 400 22px "Bangers", Impact, sans-serif; letter-spacing: 1px; padding: 14px 26px; border: 0; background: #000; color: #fff200;
           transition: left .15s, bottom .15s; }
@@ -37,7 +33,6 @@
 <div id="stage"></div>
 <h1>QTM</h1>
 <div id="compteur">QTM affichés : 0</div>
-<div class="bar">Chargement du site sérieux<i><b></b></i><span id="pct">99 %</span></div>
 <button id="fuir" type="button">Sortir de QTM</button>
 
 <script>
@@ -50,11 +45,20 @@ const calme = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const FONTS = ['Bangers', 'Creepster', 'Lobster', 'Monoton', 'Pacifico', '"Press Start 2P"', '"Rubik Glitch"',
   'UnifrakturMaguntia', '"Comic Neue"', '"Bungee Shade"', 'Impact', '"Comic Sans MS"', 'Papyrus', '"Times New Roman"', 'Courier New'];
 const COLORS = ['#ff0033', '#0044ff', '#00b832', '#ff00cc', '#ff7a00', '#000000', '#00c2d6', '#8a5a00'];
-const TEXTES = ['QTM', 'QTM', 'QTM', 'qtm', 'Q T M', 'QTM !!!', 'QTM?', 'QTMMMM', 'Q.T.M'];
+const TEXTES = ['🖕', '🖕', '🖕🖕🖕', 'QTM 🖕', 'QTM', 'QTM', 'QTM', 'qtm', 'Q T M', 'QTM !!!', 'QTM?', 'QTMMMM', 'Q.T.M'];
 
 let total = 0;
 const compteur = document.getElementById('compteur');
-const compter = n => { total += n; compteur.textContent = 'QTM affichés : ' + total; };
+const compter = n => { total += n; compteur.textContent = 'QTM affichés : ' + total; crier(); };
+
+// une voix dit QTM avec une hauteur au hasard ; les navigateurs attendent un premier toucher
+function crier() {
+  if (!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(pick(['Q T M', 'Q T M !', 'Q T M ?']));
+  u.lang = 'fr-FR'; u.pitch = rnd(0, 2); u.rate = rnd(0.6, 1.8);
+  speechSynthesis.speak(u);
+}
 
 // logos et textes fixes, dans tous les sens
 function semer(n) {
@@ -91,7 +95,7 @@ function lancer(x, y, image = Math.random() < 0.6) {
   if (image) {
     el.style.width = rnd(90, 160) + 'px';
   } else {
-    el.textContent = 'QTM';
+    el.textContent = pick(['QTM', 'QTM', '🖕', 'QTM 🖕']);
     el.style.fontFamily = pick(FONTS);
     el.style.fontSize = rnd(30, 70) + 'px';
   }
@@ -142,12 +146,6 @@ fuir.addEventListener('pointerdown', e => {
   fuir.textContent = 'Encore plus de QTM';
 });
 
-// la barre reste coincée à 99 %, parfois elle recule
-const pct = document.getElementById('pct'), barre = document.querySelector('.bar b');
-setInterval(() => {
-  const v = pick([99, 99, 99, 98.7, 99.9, 12, 99]);
-  barre.style.width = v + '%'; pct.textContent = String(v).replace('.', ',') + ' %';
-}, 1400);
 </script>
 </body>
 </html>
