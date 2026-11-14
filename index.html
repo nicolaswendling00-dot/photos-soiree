@@ -11,7 +11,7 @@
 <style>
   html, body { margin: 0; height: 100%; overflow: hidden; background: #fff8b0; touch-action: none; -webkit-user-select: none; user-select: none; }
   body { font-family: "Comic Sans MS", "Comic Neue", cursive; }
-  #stage { position: fixed; inset: 0; overflow: hidden; }
+  #stage { position: fixed; inset: 0; overflow: hidden; cursor: pointer; }
   .logo { position: absolute; width: 120px; mix-blend-mode: multiply; pointer-events: none; }
   .txt { position: absolute; font-weight: 700; white-space: nowrap; pointer-events: none; line-height: 1; }
   .dvd { position: absolute; left: 0; top: 0; will-change: transform; pointer-events: none; }
@@ -21,19 +21,15 @@
        font: 400 28vw/1 "Bangers", Impact, sans-serif; color: #ff0033; -webkit-text-stroke: 3px #000; pointer-events: none;
        animation: wobble 0.9s ease-in-out infinite alternate; }
   @keyframes wobble { to { transform: translate(-50%, -50%) rotate(7deg) scale(1.08); } }
-  #fuir { position: fixed; z-index: 7; left: 50%; bottom: calc(40px + env(safe-area-inset-bottom)); transform: translateX(-50%);
-          font: 400 22px "Bangers", Impact, sans-serif; letter-spacing: 1px; padding: 14px 26px; border: 0; background: #000; color: #fff200;
-          transition: left .15s, bottom .15s; }
   #compteur { position: fixed; z-index: 7; top: calc(10px + env(safe-area-inset-top)); left: 12px; right: 12px; text-align: center;
               font: 400 12px "Press Start 2P", monospace; color: #000; background: #fff200; padding: 8px; }
-  @media (prefers-reduced-motion: reduce) { h1 { animation: none; } #fuir { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { h1 { animation: none; } }
 </style>
 </head>
 <body>
 <div id="stage"></div>
 <h1>QTM</h1>
 <div id="compteur">QTM affichés : 0</div>
-<button id="fuir" type="button">Sortir de QTM</button>
 
 <script>
 const stage = document.getElementById('stage');
@@ -49,15 +45,17 @@ const TEXTES = ['🖕', '🖕', '🖕🖕🖕', 'QTM 🖕', 'QTM', 'QTM', 'QTM',
 
 let total = 0;
 const compteur = document.getElementById('compteur');
-const compter = n => { total += n; compteur.textContent = 'QTM affichés : ' + total; crier(); };
+const compter = n => { total += n; compteur.textContent = 'QTM affichés : ' + total; };
 
-// une voix dit QTM avec une hauteur au hasard ; les navigateurs attendent un premier toucher
+// une voix dit QTM avec une hauteur au hasard, appelée dans le tap : Safari refuse le son hors geste
 function crier() {
   if (!window.speechSynthesis) return;
-  speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(pick(['Q T M', 'Q T M !', 'Q T M ?']));
   u.lang = 'fr-FR'; u.pitch = rnd(0, 2); u.rate = rnd(0.6, 1.8);
-  speechSynthesis.speak(u);
+  u.voice = speechSynthesis.getVoices().find(v => v.lang.startsWith('fr')) || null;
+  // Safari perd la phrase si speak suit cancel dans le même tour
+  if (speechSynthesis.speaking) { speechSynthesis.cancel(); setTimeout(() => speechSynthesis.speak(u), 60); }
+  else speechSynthesis.speak(u);
 }
 
 // logos et textes fixes, dans tous les sens
@@ -75,7 +73,7 @@ function semer(n) {
       el.className = 'txt';
       el.textContent = pick(TEXTES);
       el.style.fontFamily = pick(FONTS);
-      el.style.fontSize = rnd(16, 90) + 'px';
+      el.style.fontSize = (el.textContent.includes('🖕') ? rnd(70, 180) : rnd(16, 90)) + 'px';
       el.style.color = pick(COLORS);
       el.style.transform = `rotate(${rnd(-180, 180)}deg)`;
       el.style.opacity = rnd(0.4, 1);
@@ -97,7 +95,7 @@ function lancer(x, y, image = Math.random() < 0.6) {
   } else {
     el.textContent = pick(['QTM', 'QTM', '🖕', 'QTM 🖕']);
     el.style.fontFamily = pick(FONTS);
-    el.style.fontSize = rnd(30, 70) + 'px';
+    el.style.fontSize = (el.textContent.includes('🖕') ? rnd(90, 150) : rnd(30, 70)) + 'px';
   }
   stage.appendChild(el);
   const b = { el, image, x: x ?? rnd(0, W() - 150), y: y ?? rnd(0, H() - 100),
@@ -129,22 +127,8 @@ if (!calme) requestAnimationFrame(boucle);
 else bouncers.forEach(b => b.el.style.transform = `translate(${b.x}px, ${b.y}px)`);
 
 // toucher l'écran : encore plus de QTM
-stage.addEventListener('pointerdown', e => { lancer(e.clientX - 60, e.clientY - 30); semer(3); });
+stage.addEventListener('click', e => { lancer(e.clientX - 60, e.clientY - 30); semer(3); crier(); });
 
-// le bouton pour partir s'enfuit, et s'il est attrapé il ajoute des QTM
-const fuir = document.getElementById('fuir');
-let essais = 0;
-function sauver() {
-  fuir.style.left = rnd(25, 75) + '%';
-  fuir.style.bottom = rnd(60, H() - 160) + 'px';
-  fuir.textContent = pick(['Raté', 'Non', 'Toujours QTM', 'Sortir de QTM', 'Presque', 'QTM']);
-}
-fuir.addEventListener('pointerdown', e => {
-  e.stopPropagation();
-  if (++essais % 4) return sauver();
-  semer(40); for (let i = 0; i < 5; i++) lancer();
-  fuir.textContent = 'Encore plus de QTM';
-});
 
 </script>
 </body>
